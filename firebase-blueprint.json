@@ -1,0 +1,123 @@
+{
+  "entities": {
+    "user_profile": {
+      "title": "UserProfile",
+      "description": "User profile information and application preferences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "companyName": { "type": "string" },
+        "role": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "email"]
+    },
+    "user_app_data": {
+      "title": "UserAppData",
+      "description": "Consolidated authoritative application dataset for the authenticated user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "products": { "type": "array" },
+        "clients": { "type": "array" },
+        "invoices": { "type": "array" },
+        "packingLists": { "type": "array" },
+        "sampleInvoices": { "type": "array" },
+        "contracts": { "type": "array" },
+        "proformaInvoices": { "type": "array" },
+        "quotations": { "type": "array" },
+        "quotationCalculations": { "type": "array" },
+        "certificatesOfOrigin": { "type": "array" },
+        "shippingInstructions": { "type": "array" },
+        "settings": { "type": "object" },
+        "updatedAt": { "type": "string" },
+        "lastClientSync": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "product": {
+      "title": "Product",
+      "description": "Export product catalogue item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "client": {
+      "title": "Client",
+      "description": "Buyer / customer account directory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "company": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "email": { "type": "string" },
+        "country": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "company"]
+    },
+    "invoice": {
+      "title": "Invoice",
+      "description": "Commercial invoice record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "date": { "type": "string" },
+        "grandTotal": { "type": "number" },
+        "currency": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "invoiceNumber"]
+    },
+    "quotation": {
+      "title": "Quotation",
+      "description": "Formal price quote document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "quotationNumber": { "type": "string" },
+        "date": { "type": "string" },
+        "grandTotal": { "type": "number" },
+        "currency": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "quotationNumber"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user_app_data",
+      "description": "Top-level user document containing full synced application state"
+    },
+    "/users/{userId}/products/{productId}": {
+      "schema": "product",
+      "description": "Individual product record for granular subcollection sync"
+    },
+    "/users/{userId}/clients/{clientId}": {
+      "schema": "client",
+      "description": "Individual client record for granular subcollection sync"
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": "invoice",
+      "description": "Individual commercial invoice record"
+    },
+    "/users/{userId}/quotations/{quotationId}": {
+      "schema": "quotation",
+      "description": "Individual sales quotation record"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Waimao Tools",
+  "description": "Professional foreign trade management system and manufacturing cost calculation engine, featuring multi-currency quotations, proforma invoices, commercial invoices, packing lists, contracts, and export documentation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

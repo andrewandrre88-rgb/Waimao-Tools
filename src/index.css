@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
+}
+
+/* Custom scrollbars for pristine look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* High fidelity Print & PDF compilation engine styling */
+@media print {
+  /* Completely hide all structural frames and panels */
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  /* Target only the active live preview A4 sheet */
+  #print-area, #print-area *,
+  #contract-print-area, #contract-print-area *,
+  #certificate-preview-document, #certificate-preview-document *,
+  #shipping-preview-document, #shipping-preview-document *,
+  #shipping-instruction-preview, #shipping-instruction-preview * {
+    visibility: visible !important;
+  }
+
+  #print-area, #contract-print-area, #certificate-preview-document, #shipping-preview-document, #shipping-instruction-preview {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 8mm !important;
+    margin: 0 auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    color: #1e293b !important;
+    overflow: visible !important;
+    page-break-after: avoid;
+    page-break-before: avoid;
+  }
+
+  /* Force background colors and brand colors to compile in PDF exports */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Eliminate browser print margin stamps (date, url, page number) */
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+}
