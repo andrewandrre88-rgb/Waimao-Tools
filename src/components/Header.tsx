@@ -129,7 +129,7 @@ export default function Header({
   // Safe display names without legacy Mila references
   const displayName = currentUser?.name?.includes('Mila') ? 'Authorized Specialist' : (currentUser?.name || 'Authorized User');
   const displayCompany = currentUser?.companyName?.includes('Mila') ? 'Waimao International Trade' : (currentUser?.companyName || 'Waimao International Trade Co., Ltd.');
-  const displayEmail = currentUser?.email?.includes('milaplastics') ? 'user@waimaotools.com' : (currentUser?.email || 'user@waimaotools.com');
+  const displayEmail = currentUser?.email?.includes('milaplastics') ? 'user@waimaotools.online' : (currentUser?.email || 'user@waimaotools.online');
   const userInitials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'W';
 
   return (

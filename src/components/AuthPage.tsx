@@ -65,7 +65,14 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
         return;
       }
     } catch (err: any) {
-      console.log('Standard popup not available in this environment:', err);
+      console.log('Firebase auth popup notification:', err);
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+        setErrorMsg(
+          language === 'zh'
+            ? '当前域名 (waimaotools.online) 尚未在 Firebase 控制台添加授权网域。请在 Firebase Console > Authentication > Settings > Authorized Domains 中添加 waimaotools.online，或直接在下方输入邮箱继续使用。'
+            : 'Domain waimaotools.online is not authorized yet in Firebase Auth. Add waimaotools.online to Firebase Console > Authentication > Settings > Authorized Domains, or enter your email below.'
+        );
+      }
     }
 
     setIsLoading(false);

@@ -10,7 +10,7 @@ export interface StoredAccount extends AuthUser {
 const DEFAULT_DEMO_USER: AuthUser = {
   id: 'usr_demo_001',
   name: 'Authorized Trade Specialist',
-  email: 'user@waimaotools.com',
+  email: 'user@waimaotools.online',
   companyName: 'Waimao International Trade Co., Ltd.',
   role: 'Operations Manager'
 };
@@ -44,7 +44,7 @@ export function getCurrentUser(): AuthUser | null {
           user.name = 'Authorized Trade Specialist';
         }
         if (user.email?.includes('milaplastics') || user.email?.includes('milagroup')) {
-          user.email = 'user@waimaotools.com';
+          user.email = 'user@waimaotools.online';
         }
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
         localStorage.removeItem('mila_current_user');
@@ -73,7 +73,7 @@ export function loginUser(email: string, password: string): { user?: AuthUser; e
   }
 
   // Check demo credentials shortcut or default fallback
-  if ((cleanEmail === 'admin@waimaotools.com' || cleanEmail === 'demo@waimaotools.com' || cleanEmail === 'admin@milagroup.cn') && password === 'password123') {
+  if ((cleanEmail === 'admin@waimaotools.online' || cleanEmail === 'admin@waimaotools.com' || cleanEmail === 'demo@waimaotools.online' || cleanEmail === 'demo@waimaotools.com' || cleanEmail === 'admin@milagroup.cn') && password === 'password123') {
     setCurrentUser(DEFAULT_DEMO_USER);
     return { user: DEFAULT_DEMO_USER };
   }
