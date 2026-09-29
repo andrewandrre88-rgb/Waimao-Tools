@@ -144,12 +144,17 @@ export default function Header({
         >
           <Menu size={20} />
         </button>
-        <div className="flex items-center gap-2 lg:hidden">
+        <button 
+          type="button"
+          onClick={() => setActiveTab('home')}
+          className="flex items-center gap-2 lg:hidden text-left hover:opacity-90 cursor-pointer"
+          title="Go to Home"
+        >
           <div className="w-7 h-7 rounded-lg bg-[#1565C0] flex items-center justify-center text-white font-black text-sm shadow-xs">
             W
           </div>
           <span className="font-extrabold text-slate-800 text-xs sm:text-sm tracking-tight hidden xs:inline">WAIMAO TOOLS</span>
-        </div>
+        </button>
       </div>
 
       {/* Global Search Bar */}

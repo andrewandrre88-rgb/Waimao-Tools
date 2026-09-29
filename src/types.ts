@@ -587,6 +587,7 @@ export interface QuotationCalculation {
 }
 
 export type ActiveTab = 
+  | 'home'
   | 'dashboard'
   | 'quotation_calculator'
   | 'invoice'
@@ -600,7 +601,8 @@ export type ActiveTab =
   | 'cbm_calculator'
   | 'products'
   | 'clients'
-  | 'settings';
+  | 'settings'
+  | 'membership';
 
 export interface CurrencyInfo {
   code: string;

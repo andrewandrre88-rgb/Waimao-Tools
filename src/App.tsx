@@ -50,9 +50,14 @@ import QuotationGenerator from './components/QuotationGenerator';
 import QuotationCalculator from './components/QuotationCalculator';
 import CbmCalculator from './components/CbmCalculator';
 import CompanySettings from './components/CompanySettings';
+import HomePage from './components/HomePage';
 import AuthPage from './components/AuthPage';
+import MembershipManager from './components/MembershipManager';
+import ActivationRequiredModal from './components/ActivationRequiredModal';
+import { checkUserAuthorization, isSuperAdmin } from './utils/membership';
 
 import { 
+  Home,
   LayoutDashboard, 
   FileText, 
   BadgePercent, 
@@ -75,8 +80,31 @@ function AppWorkspace() {
   const { t, language } = useLanguage();
   const [data, setData] = useState<AppData | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getCurrentUser());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Membership Authorization Gate State
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(false);
+  const isSuperUser = isSuperAdmin(currentUser?.email);
+
+  // Verify membership whenever user changes
+  const verifyMembership = useCallback(async () => {
+    if (!currentUser?.email) return;
+    setIsCheckingAuth(true);
+    try {
+      const result = await checkUserAuthorization(currentUser.email);
+      setIsAuthorized(result.authorized);
+    } catch (e) {
+      console.warn('Membership check failed:', e);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  }, [currentUser?.email]);
+
+  useEffect(() => {
+    verifyMembership();
+  }, [verifyMembership]);
   
   // Real-time Cloud Firestore Sync state
   const [syncState, setSyncState] = useState<CloudSyncState>({
@@ -652,6 +680,17 @@ function AppWorkspace() {
             onManualSync={handleManualCloudSync}
           />
         );
+      case 'membership':
+        return <MembershipManager />;
+      case 'home':
+        return (
+          <HomePage 
+            data={data}
+            setActiveTab={setActiveTab}
+            onCreateNewDocument={handleCreateNewDocument}
+            isSuperAdmin={isSuperUser}
+          />
+        );
       default:
         return <Dashboard data={data} setActiveTab={setActiveTab} onCreateNewDocument={handleCreateNewDocument} onViewDocument={handleViewDocument} />;
     }
@@ -662,6 +701,19 @@ function AppWorkspace() {
       {/* Unsaved Changes Confirmation Modal / Guard Popup */}
       <UnsavedChangesModal />
 
+      {/* Activation Gate Modal: Shows if visitor is authenticated with Google but not yet whitelisted */}
+      {!isAuthorized && !isSuperUser && (
+        <ActivationRequiredModal 
+          user={currentUser} 
+          onLogout={handleLogout}
+          onRetryCheck={verifyMembership}
+          onBrowseHomePage={() => {
+            setIsAuthorized(true);
+            setActiveTab('home');
+          }}
+        />
+      )}
+
       {/* Sidebar Frame - Offcanvas on Mobile/Tablet, Pinned on Desktop */}
       <Sidebar 
         activeTab={activeTab} 
@@ -669,6 +721,7 @@ function AppWorkspace() {
         data={data}
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
+        isSuperAdmin={isSuperUser}
       />
 
       {/* Main viewport frame */}
@@ -702,8 +755,19 @@ function AppWorkspace() {
       >
         <button
           type="button"
+          onClick={() => handleTabChange('home')}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'home' ? 'text-[#1565C0] font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Home size={20} className={activeTab === 'home' ? 'stroke-[2.5]' : 'stroke-2'} />
+          <span className="text-[10px] mt-0.5 tracking-tight">{language === 'zh' ? '首页' : 'Home'}</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => handleTabChange('dashboard')}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
             activeTab === 'dashboard' ? 'text-[#1565C0] font-bold' : 'text-slate-500 hover:text-slate-800'
           }`}
         >

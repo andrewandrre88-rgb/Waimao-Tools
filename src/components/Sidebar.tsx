@@ -2,23 +2,25 @@ import { ActiveTab } from '../types';
 import { AppData } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { 
+  Home,
   LayoutDashboard, 
   FileText, 
   PackageOpen, 
   Gift, 
-  FileCheck,
-  Coins,
-  FileSpreadsheet,
-  Globe2,
-  Ship,
-  Calculator,
-  BadgePercent,
-  Box,
+  FileCheck, 
+  Coins, 
+  FileSpreadsheet, 
+  Globe2, 
+  Ship, 
+  Calculator, 
+  BadgePercent, 
+  Box, 
   FolderHeart, 
   Users, 
-  Settings,
-  Menu,
-  X
+  Settings, 
+  ShieldCheck,
+  Menu, 
+  X 
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,12 +29,19 @@ interface SidebarProps {
   data: AppData;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  isSuperAdmin?: boolean;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOpen }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOpen, isSuperAdmin }: SidebarProps) {
   const { t, language } = useLanguage();
 
   const menuItems = [
+    { 
+      id: 'home' as ActiveTab, 
+      label: t('nav.home', 'Home & Features'), 
+      icon: Home,
+      badge: null
+    },
     { 
       id: 'dashboard' as ActiveTab, 
       label: t('nav.dashboard', 'Dashboard'), 
@@ -116,7 +125,13 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
       label: t('nav.settings', 'Company Settings'), 
       icon: Settings,
       badge: null
-    }
+    },
+    ...(isSuperAdmin ? [{
+      id: 'membership' as ActiveTab,
+      label: language === 'zh' ? '🔑 会员开通与管理' : '🔑 Member Access Admin',
+      icon: ShieldCheck,
+      badge: 'VIP'
+    }] : [])
   ];
 
   return (
@@ -138,7 +153,15 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
       >
         {/* Sidebar Header */}
         <div className="h-16 border-b border-slate-200 flex items-center justify-between px-5 sm:px-6 shrink-0">
-          <div className="flex items-center gap-3">
+          <button 
+            type="button"
+            onClick={() => {
+              setActiveTab('home');
+              setIsOpen(false);
+            }}
+            className="flex items-center gap-3 text-left hover:opacity-90 transition-opacity cursor-pointer"
+            title="Go to Home"
+          >
             <div className="w-8 h-8 rounded-lg bg-[#1565C0] flex items-center justify-center text-white font-black text-lg shadow-xs">
               W
             </div>
@@ -150,7 +173,7 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
                 {t('brand.subtitle', 'Foreign Trade & Export')}
               </span>
             </div>
-          </div>
+          </button>
           
           <button 
             className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors active:scale-95 cursor-pointer"

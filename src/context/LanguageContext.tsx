@@ -35,6 +35,7 @@ const translations: Record<Language, Record<string, string>> = {
     'menu.new_calculator': 'Quotation Cost Calculator',
 
     // Sidebar navigation
+    'nav.home': 'Home & Features',
     'nav.dashboard': 'Dashboard',
     'nav.quotation_calculator': 'Quotation Calculator',
     'nav.invoice': 'Commercial Invoice',
@@ -380,6 +381,7 @@ const translations: Record<Language, Record<string, string>> = {
     'menu.new_calculator': 'FOB/CIF 成本与利润核算器',
 
     // Sidebar navigation
+    'nav.home': '首页与功能详解',
     'nav.dashboard': '工作台总览',
     'nav.quotation_calculator': '报价与利润核算',
     'nav.invoice': '商业发票 (CI)',
