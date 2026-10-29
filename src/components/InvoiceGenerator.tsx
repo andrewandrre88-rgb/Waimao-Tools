@@ -24,7 +24,8 @@ import {
   Edit2,
   ZoomIn,
   ZoomOut,
-  RotateCcw
+  RotateCcw,
+  Stamp
 } from 'lucide-react';
 
 import { compressImageFile } from '../utils/imageCompressor';
@@ -1491,51 +1492,6 @@ export default function InvoiceGenerator({
 
             {/* Right Side Live A4 Visual Preview (lg:col-span-6) */}
             <div className={`lg:col-span-6 flex flex-col items-center w-full min-w-0 ${mobileTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
-              <div className="w-full flex items-center justify-between gap-2 mb-2.5 px-1 print:hidden">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 shrink-0">
-                  <Eye size={12} className="text-[#1565C0]" /> Live A4 Export Preview
-                </span>
-
-                {/* Zoom & Fit Toolbar */}
-                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(prev => Math.max(40, prev - 15))}
-                    className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded transition-colors cursor-pointer"
-                    title="Zoom Out"
-                  >
-                    <ZoomOut size={13} />
-                  </button>
-                  <span className="text-[10px] font-mono font-bold text-slate-600 px-1.5 min-w-10 text-center">
-                    {previewZoom}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(prev => Math.min(150, prev + 15))}
-                    className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded transition-colors cursor-pointer"
-                    title="Zoom In"
-                  >
-                    <ZoomIn size={13} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(100)}
-                    className="px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 hover:text-[#1565C0] hover:bg-slate-50 rounded transition-colors ml-0.5 cursor-pointer"
-                    title="Reset Zoom (100%)"
-                  >
-                    100%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(65)}
-                    className="px-1.5 py-0.5 text-[9px] font-semibold text-[#1565C0] bg-blue-50 hover:bg-blue-100 rounded transition-colors cursor-pointer"
-                    title="Fit on Mobile Screen (65%)"
-                  >
-                    Fit
-                  </button>
-                </div>
-              </div>
-
               {/* Responsive Scroll & Scale Container */}
               <div className="w-full overflow-x-auto overflow-y-visible pb-4 pt-1 flex justify-center bg-slate-200/40 rounded-2xl border border-slate-200/80 p-2 sm:p-4">
                 <div 
@@ -1997,26 +1953,12 @@ export default function InvoiceGenerator({
                 </div>
 
                 {/* Print Layout Footer */}
-                <div className="border-t border-slate-100 pt-6 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-8 shrink-0">
-                  {/* Stamp & Sign Overlay */}
-                  <div className="flex gap-4 items-center shrink-0 relative h-16 w-60 justify-end">
-                    {settings.secondaryStamp && (
-                      <div className="absolute right-24 bottom-0 w-16 h-16 pointer-events-none opacity-90 mix-blend-multiply">
-                        <TransparentSignature src={settings.secondaryStamp} alt="Secondary Stamp" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-                    {settings.stamp && (
-                      <div className="absolute right-12 bottom-0 w-16 h-16 pointer-events-none opacity-90 mix-blend-multiply">
-                        <TransparentSignature src={settings.stamp} alt="Factory Stamp" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-                    {settings.signature && (
-                      <div className="relative z-10 w-28 h-12 pointer-events-none text-right flex flex-col justify-end">
-                        <p className="text-[7px] text-slate-400 uppercase tracking-widest text-center mb-0.5">Authorized Signature</p>
-                        <TransparentSignature src={settings.signature} alt="Authorized Signature" className="max-w-full max-h-10 object-contain mx-auto" />
-                      </div>
-                    )}
-                  </div>
+                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
+                  {settings.stamp && (
+                    <div className="relative h-16 w-28 flex items-center justify-end">
+                      <TransparentSignature src={settings.stamp} alt="Factory Stamp" className="max-h-16 max-w-full object-contain" />
+                    </div>
+                  )}
                 </div>
               </div>
                 </div>

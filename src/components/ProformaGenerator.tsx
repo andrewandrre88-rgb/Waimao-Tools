@@ -761,19 +761,19 @@ export default function ProformaGenerator({
   );
 
   // Computed Effective Seals, Stamps & Signatures for Current Proforma Invoice
-  const effectivePrimaryStamp = activeProforma?.showStamp !== false
+  const effectivePrimaryStamp = (activeProforma?.showSignatureBlock !== false && activeProforma?.showStamp !== false)
     ? (activeProforma?.customStamp !== undefined
         ? (activeProforma.customStamp || null)
         : (settings.stamp || null))
     : null;
 
-  const effectiveSecondaryStamp = activeProforma?.showSecondaryStamp !== false
+  const effectiveSecondaryStamp = (activeProforma?.showSignatureBlock !== false && activeProforma?.showSecondaryStamp !== false)
     ? (activeProforma?.customSecondaryStamp !== undefined
         ? (activeProforma.customSecondaryStamp || null)
         : (settings.secondaryStamp || null))
     : null;
 
-  const effectiveSignature = activeProforma?.showSignature !== false
+  const effectiveSignature = (activeProforma?.showSignatureBlock !== false && activeProforma?.showSignature !== false)
     ? (activeProforma?.customSignature !== undefined
         ? (activeProforma.customSignature || null)
         : (settings.signature || null))
@@ -2183,42 +2183,6 @@ export default function ProformaGenerator({
 
             {/* Right Side Live A4 Visual Preview (lg:col-span-6) */}
             <div className={`lg:col-span-6 flex flex-col items-center w-full min-w-0 ${mobileTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
-              <div className="w-full flex items-center justify-between mb-2.5 px-1 print:hidden">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 shrink-0">
-                  <Eye size={12} className="text-[#1565C0]" /> Live A4 Export Sheet Preview (WYSIWYG)
-                </span>
-
-                {/* Zoom Controller */}
-                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs text-[11px] font-bold text-slate-600">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(z => Math.max(50, z - 10))}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 rounded text-slate-700 cursor-pointer"
-                    title="Zoom Out"
-                  >
-                    -
-                  </button>
-                  <span className="px-1.5 font-mono text-[10px] min-w-[38px] text-center">{previewZoom}%</span>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(z => Math.min(150, z + 10))}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 rounded text-slate-700 cursor-pointer"
-                    title="Zoom In"
-                  >
-                    +
-                  </button>
-                  {previewZoom !== 100 && (
-                    <button
-                      type="button"
-                      onClick={() => setPreviewZoom(100)}
-                      className="px-1.5 py-0.5 text-[9px] text-[#1565C0] hover:bg-blue-50 rounded cursor-pointer ml-0.5 font-semibold"
-                    >
-                      Reset
-                    </button>
-                  )}
-                </div>
-              </div>
-
               {/* Realistic A4 Page Wrap Container matching Commercial Invoice */}
               <div className="w-full overflow-x-auto pb-6 flex justify-center bg-slate-100/50 p-2 sm:p-4 rounded-xl border border-slate-200/80">
                 <div 
@@ -2619,35 +2583,12 @@ export default function ProformaGenerator({
                 </div>
 
                 {/* Print Layout Footer */}
-                <div className="border-t border-slate-100 pt-5 flex items-end justify-between text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
-                  <div className="text-[7.5px] text-slate-400 space-y-0.5 max-w-[50%]">
-                    <p>Please sign and stamp this Proforma Invoice to confirm order production.</p>
-                    <p className="text-[7px] text-slate-300">Generated via MILA Packaging Export Suite</p>
-                  </div>
-
-                  {/* Stamp & Signature Overlay */}
-                  <div className="flex gap-4 items-center shrink-0 relative h-16 min-w-[240px] justify-end">
-                    {effectiveSecondaryStamp && (
-                      <div className="absolute right-24 bottom-0 w-16 h-16 pointer-events-none opacity-90 mix-blend-multiply transition-all">
-                        <TransparentSignature src={effectiveSecondaryStamp} alt="Secondary Stamp" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-                    {effectivePrimaryStamp && (
-                      <div className="absolute right-12 bottom-0 w-16 h-16 pointer-events-none opacity-90 mix-blend-multiply transition-all">
-                        <TransparentSignature src={effectivePrimaryStamp} alt="Factory Stamp" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-                    {effectiveSignature ? (
-                      <div className="relative z-10 w-28 h-12 pointer-events-none text-right flex flex-col justify-end">
-                        <p className="text-[7px] text-slate-400 uppercase tracking-widest text-center mb-0.5">Authorized Signature</p>
-                        <TransparentSignature src={effectiveSignature} alt="Authorized Signature" className="max-w-full max-h-10 object-contain mx-auto" />
-                      </div>
-                    ) : (
-                      <div className="relative z-10 w-28 h-12 pointer-events-none text-right flex flex-col justify-end border-b border-dashed border-slate-300 pb-1">
-                        <p className="text-[7px] text-slate-400 uppercase tracking-widest text-center">Authorized Signature</p>
-                      </div>
-                    )}
-                  </div>
+                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
+                  {effectivePrimaryStamp && (
+                    <div className="relative h-16 w-28 flex items-center justify-end">
+                      <TransparentSignature src={effectivePrimaryStamp} alt="Factory Stamp" className="max-h-16 max-w-full object-contain" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

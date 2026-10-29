@@ -2,7 +2,6 @@ import { ActiveTab } from '../types';
 import { AppData } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { 
-  Home,
   LayoutDashboard, 
   FileText, 
   PackageOpen, 
@@ -18,7 +17,6 @@ import {
   FolderHeart, 
   Users, 
   Settings, 
-  ShieldCheck,
   Menu, 
   X 
 } from 'lucide-react';
@@ -36,12 +34,6 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
   const { t, language } = useLanguage();
 
   const menuItems = [
-    { 
-      id: 'home' as ActiveTab, 
-      label: t('nav.home', 'Home & Features'), 
-      icon: Home,
-      badge: null
-    },
     { 
       id: 'dashboard' as ActiveTab, 
       label: t('nav.dashboard', 'Dashboard'), 
@@ -125,13 +117,7 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
       label: t('nav.settings', 'Company Settings'), 
       icon: Settings,
       badge: null
-    },
-    ...(isSuperAdmin ? [{
-      id: 'membership' as ActiveTab,
-      label: language === 'zh' ? '🔑 会员开通与管理' : '🔑 Member Access Admin',
-      icon: ShieldCheck,
-      badge: 'VIP'
-    }] : [])
+    }
   ];
 
   return (
@@ -156,7 +142,7 @@ export default function Sidebar({ activeTab, setActiveTab, data, isOpen, setIsOp
           <button 
             type="button"
             onClick={() => {
-              setActiveTab('home');
+              setActiveTab('dashboard');
               setIsOpen(false);
             }}
             className="flex items-center gap-3 text-left hover:opacity-90 transition-opacity cursor-pointer"

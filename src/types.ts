@@ -121,6 +121,14 @@ export interface Invoice {
   localAccountNumber?: string;
   wechatQr?: string;
   alipayQr?: string;
+  showConfirmationNotice?: boolean;
+  confirmationNotice?: string;
+  showFooterBranding?: boolean;
+  footerBrandingText?: string;
+  showSignatureBlock?: boolean;
+  showStamp?: boolean;
+  showSecondaryStamp?: boolean;
+  showSignature?: boolean;
 }
 
 export interface PackingListItem {
@@ -359,6 +367,11 @@ export interface ProformaInvoice {
   showStamp?: boolean;
   showSecondaryStamp?: boolean;
   showSignature?: boolean;
+  showSignatureBlock?: boolean;
+  showConfirmationNotice?: boolean;
+  confirmationNotice?: string;
+  showFooterBranding?: boolean;
+  footerBrandingText?: string;
   customStamp?: string;
   customSecondaryStamp?: string;
   customSignature?: string;
@@ -489,6 +502,13 @@ export interface Quotation {
   notes: string;
   terms: string;
   showStamp?: boolean;
+  showSecondaryStamp?: boolean;
+  showSignature?: boolean;
+  showSignatureBlock?: boolean;
+  showConfirmationNotice?: boolean;
+  confirmationNotice?: string;
+  showFooterBranding?: boolean;
+  footerBrandingText?: string;
   paymentMethodType?: 'international' | 'local_rmb' | 'both';
   localBankName?: string;
   localAccountName?: string;

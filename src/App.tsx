@@ -50,14 +50,11 @@ import QuotationGenerator from './components/QuotationGenerator';
 import QuotationCalculator from './components/QuotationCalculator';
 import CbmCalculator from './components/CbmCalculator';
 import CompanySettings from './components/CompanySettings';
-import HomePage from './components/HomePage';
 import AuthPage from './components/AuthPage';
-import MembershipManager from './components/MembershipManager';
 import ActivationRequiredModal from './components/ActivationRequiredModal';
 import { checkUserAuthorization, isSuperAdmin } from './utils/membership';
 
 import { 
-  Home,
   LayoutDashboard, 
   FileText, 
   BadgePercent, 
@@ -80,7 +77,7 @@ function AppWorkspace() {
   const { t, language } = useLanguage();
   const [data, setData] = useState<AppData | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getCurrentUser());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Membership Authorization Gate State
@@ -680,17 +677,6 @@ function AppWorkspace() {
             onManualSync={handleManualCloudSync}
           />
         );
-      case 'membership':
-        return <MembershipManager />;
-      case 'home':
-        return (
-          <HomePage 
-            data={data}
-            setActiveTab={setActiveTab}
-            onCreateNewDocument={handleCreateNewDocument}
-            isSuperAdmin={isSuperUser}
-          />
-        );
       default:
         return <Dashboard data={data} setActiveTab={setActiveTab} onCreateNewDocument={handleCreateNewDocument} onViewDocument={handleViewDocument} />;
     }
@@ -707,10 +693,6 @@ function AppWorkspace() {
           user={currentUser} 
           onLogout={handleLogout}
           onRetryCheck={verifyMembership}
-          onBrowseHomePage={() => {
-            setIsAuthorized(true);
-            setActiveTab('home');
-          }}
         />
       )}
 
@@ -753,16 +735,6 @@ function AppWorkspace() {
         className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 py-1.5 px-2 flex items-center justify-around md:hidden shadow-lg print:hidden"
         aria-label="Mobile Navigation"
       >
-        <button
-          type="button"
-          onClick={() => handleTabChange('home')}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'home' ? 'text-[#1565C0] font-bold' : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Home size={20} className={activeTab === 'home' ? 'stroke-[2.5]' : 'stroke-2'} />
-          <span className="text-[10px] mt-0.5 tracking-tight">{language === 'zh' ? '首页' : 'Home'}</span>
-        </button>
 
         <button
           type="button"
