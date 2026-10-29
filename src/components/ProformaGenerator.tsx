@@ -4,6 +4,7 @@ import { generateId, getNextDocumentNumber, DEFAULT_STAMP_SVG, DEFAULT_CONTRACT_
 import { exportDocumentToPDF, printDocument } from '../utils/pdf';
 import { compressImageFile, removeWhiteBackground } from '../utils/imageCompressor';
 import { TransparentSignature } from './TransparentSignature';
+import { DraggableStamp } from './DraggableStamp';
 import ProductImageModal from './ProductImageModal';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -44,7 +45,9 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   EyeOff,
-  Languages
+  Languages,
+  Move,
+  MapPin
 } from 'lucide-react';
 
 interface ProformaGeneratorProps {
@@ -74,6 +77,7 @@ export default function ProformaGenerator({
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const [previewZoom, setPreviewZoom] = useState<number>(100);
+  const printAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Navigation Guard for Unsaved Changes
   const { registerUnsavedChanges, unregisterUnsavedChanges, requestActionWithGuard } = useNavigationGuard();
@@ -1956,6 +1960,78 @@ export default function ProformaGenerator({
                         </button>
                       )}
                     </div>
+
+                    {/* Position & Placement Controls */}
+                    {activeProforma.showStamp !== false && effectivePrimaryStamp && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-bold text-slate-700 flex items-center gap-1">
+                            <Move size={11} className="text-[#1565C0]" />
+                            <span>{language === 'zh' ? '印章自由摆放' : 'Stamp Placement'}</span>
+                          </span>
+                          {activeProforma.stampPosition && (
+                            <button
+                              type="button"
+                              onClick={() => handleFieldChange('stampPosition', null)}
+                              className="text-[9px] text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-0.5 cursor-pointer"
+                              title="Reset to default footer position"
+                            >
+                              <RotateCcw size={9} />
+                              <span>{language === 'zh' ? '重置默认' : 'Reset'}</span>
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-slate-400 leading-tight">
+                          {language === 'zh' ? '💡 可在右侧单据预览页任意自由拖拽盖章，或点击预设位置：' : '💡 Drag stamp anywhere on the preview document, or click a preset:'}
+                        </p>
+                        <div className="grid grid-cols-2 gap-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleFieldChange('stampPosition', { xPct: 84, yPct: 92 })}
+                            className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                              (!activeProforma.stampPosition || (activeProforma.stampPosition.xPct === 84 && activeProforma.stampPosition.yPct === 92))
+                                ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            📄 {language === 'zh' ? '单据右下角' : 'Footer Right'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleFieldChange('stampPosition', { xPct: 42, yPct: 83 })}
+                            className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                              (activeProforma.stampPosition?.xPct === 42 && activeProforma.stampPosition?.yPct === 83)
+                                ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            🏦 {language === 'zh' ? '银行电汇旁' : 'Bank Remittance'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleFieldChange('stampPosition', { xPct: 82, yPct: 76 })}
+                            className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                              (activeProforma.stampPosition?.xPct === 82 && activeProforma.stampPosition?.yPct === 76)
+                                ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            💰 {language === 'zh' ? '总计结算处' : 'Grand Total Area'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleFieldChange('stampPosition', { xPct: 40, yPct: 92 })}
+                            className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                              (activeProforma.stampPosition?.xPct === 40 && activeProforma.stampPosition?.yPct === 92)
+                                ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            ✍️ {language === 'zh' ? '条款说明处' : 'Terms & Notes'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* 2. Secondary Stamp (Contract / Oval) */}
@@ -2187,6 +2263,7 @@ export default function ProformaGenerator({
               <div className="w-full overflow-x-auto pb-6 flex justify-center bg-slate-100/50 p-2 sm:p-4 rounded-xl border border-slate-200/80">
                 <div 
                   id="print-area"
+                  ref={printAreaRef}
                   style={{ 
                     boxSizing: 'border-box',
                     transform: previewZoom !== 100 ? `scale(${previewZoom / 100})` : undefined,
@@ -2583,13 +2660,24 @@ export default function ProformaGenerator({
                 </div>
 
                 {/* Print Layout Footer */}
-                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
-                  {effectivePrimaryStamp && (
-                    <div className="relative h-16 w-28 flex items-center justify-end">
-                      <TransparentSignature src={effectivePrimaryStamp} alt="Factory Stamp" className="max-h-16 max-w-full object-contain" />
-                    </div>
-                  )}
+                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0 min-h-16">
+                  {/* Base layout spacer for footer rule */}
                 </div>
+
+                {/* Free-Placement Draggable & Repositionable Factory Stamp */}
+                {effectivePrimaryStamp && activeProforma.showStamp !== false && (
+                  <DraggableStamp
+                    src={effectivePrimaryStamp}
+                    alt="Factory Stamp"
+                    containerRef={printAreaRef}
+                    position={activeProforma.stampPosition}
+                    onPositionChange={(pos) => handleFieldChange('stampPosition', pos)}
+                    scale={activeProforma.stampScale || 1}
+                    onScaleChange={(scale) => handleFieldChange('stampScale', scale)}
+                    defaultPosition={{ xPct: 84, yPct: 92 }}
+                    language={language as 'zh' | 'en'}
+                  />
+                )}
               </div>
             </div>
           </div>

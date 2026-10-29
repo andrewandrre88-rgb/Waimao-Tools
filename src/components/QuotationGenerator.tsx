@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Quotation, QuotationItem, Client, Product, CompanySettings, ProformaInvoice, Contract, ProformaInvoiceItem, ContractItem, getCurrencySymbol, formatUnitPrice, SUPPORTED_CURRENCIES } from '../types';
 import { generateId, getNextDocumentNumber } from '../utils/storage';
 import { exportDocumentToPDF, printDocument } from '../utils/pdf';
 import { compressImageFile } from '../utils/imageCompressor';
 import { TransparentSignature } from './TransparentSignature';
+import { DraggableStamp } from './DraggableStamp';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 import { 
   FileSpreadsheet, 
@@ -33,7 +34,9 @@ import {
   ShieldCheck,
   Tag,
   Boxes,
-  Stamp
+  Stamp,
+  Move,
+  RotateCcw
 } from 'lucide-react';
 
 interface QuotationGeneratorProps {
@@ -79,6 +82,7 @@ export default function QuotationGenerator({
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const [previewZoom, setPreviewZoom] = useState<number>(100);
+  const printAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Navigation Guard for Unsaved Changes
   const { registerUnsavedChanges, unregisterUnsavedChanges, requestActionWithGuard } = useNavigationGuard();
@@ -1965,16 +1969,86 @@ export default function QuotationGenerator({
                   )}
                 </div>
 
-                <div className="pt-2 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700">
-                    {language === 'zh' ? '在单据中显示公司印章公章' : 'Display Company Stamp & Seal'}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={activeQuotation?.showStamp ?? true}
-                    onChange={(e) => handleFieldChange('showStamp', e.target.checked)}
-                    className="w-4 h-4 text-[#1565C0] rounded border-slate-300 focus:ring-[#1565C0]"
-                  />
+                <div className="pt-2 border-t border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <Stamp size={13} className="text-[#1565C0]" />
+                      <span>{language === 'zh' ? '在单据中显示公司印章公章' : 'Display Company Stamp & Seal'}</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {activeQuotation?.stampPosition && (
+                        <button
+                          type="button"
+                          onClick={() => handleFieldChange('stampPosition', null)}
+                          className="text-[9px] text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-0.5 cursor-pointer"
+                          title="Reset to default footer position"
+                        >
+                          <RotateCcw size={9} />
+                          <span>{language === 'zh' ? '重置位置' : 'Reset'}</span>
+                        </button>
+                      )}
+                      <input
+                        type="checkbox"
+                        checked={activeQuotation?.showStamp ?? true}
+                        onChange={(e) => handleFieldChange('showStamp', e.target.checked)}
+                        className="w-4 h-4 text-[#1565C0] rounded border-slate-300 focus:ring-[#1565C0]"
+                      />
+                    </div>
+                  </div>
+
+                  {settings.stamp && (activeQuotation?.showStamp ?? true) && (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[9px] text-slate-400 leading-tight">
+                        {language === 'zh' ? '💡 支持直接在右侧报价单预览页任意自由拖拽盖章，或点击快捷定位：' : '💡 Directly click & drag stamp anywhere on preview page, or snap to preset:'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-1 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => handleFieldChange('stampPosition', { xPct: 84, yPct: 92 })}
+                          className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                            (!activeQuotation?.stampPosition || (activeQuotation.stampPosition.xPct === 84 && activeQuotation.stampPosition.yPct === 92))
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          📄 {language === 'zh' ? '单据右下角' : 'Footer Right'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFieldChange('stampPosition', { xPct: 42, yPct: 83 })}
+                          className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                            (activeQuotation?.stampPosition?.xPct === 42 && activeQuotation.stampPosition?.yPct === 83)
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          🏦 {language === 'zh' ? '银行电汇旁' : 'Bank Remittance'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFieldChange('stampPosition', { xPct: 82, yPct: 76 })}
+                          className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                            (activeQuotation?.stampPosition?.xPct === 82 && activeQuotation.stampPosition?.yPct === 76)
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          💰 {language === 'zh' ? '总计结算处' : 'Grand Total Area'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFieldChange('stampPosition', { xPct: 40, yPct: 92 })}
+                          className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                            (activeQuotation?.stampPosition?.xPct === 40 && activeQuotation.stampPosition?.yPct === 92)
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          ✍️ {language === 'zh' ? '条款说明处' : 'Terms & Notes'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1985,6 +2059,7 @@ export default function QuotationGenerator({
               <div className="w-full overflow-x-auto pb-6 flex justify-center bg-slate-100/50 p-2 sm:p-4 rounded-xl border border-slate-200/80">
                 <div 
                   id="print-area" 
+                  ref={printAreaRef}
                   style={{ 
                     boxSizing: 'border-box',
                     transform: previewZoom !== 100 ? `scale(${previewZoom / 100})` : undefined,
@@ -2426,13 +2501,24 @@ export default function QuotationGenerator({
                   </div>
 
                   {/* Print Layout Footer */}
-                  <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
-                    {settings.stamp && (
-                      <div className="relative h-16 w-28 flex items-center justify-end">
-                        <TransparentSignature src={settings.stamp} alt="Factory Stamp" className="max-h-16 max-w-full object-contain" />
-                      </div>
-                    )}
+                  <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0 min-h-16">
+                    {/* Base layout spacer for footer rule */}
                   </div>
+
+                  {/* Free-Placement Draggable & Repositionable Factory Stamp */}
+                  {settings.stamp && (activeQuotation?.showStamp ?? true) && (
+                    <DraggableStamp
+                      src={settings.stamp}
+                      alt="Factory Stamp"
+                      containerRef={printAreaRef}
+                      position={activeQuotation?.stampPosition}
+                      onPositionChange={(pos) => handleFieldChange('stampPosition', pos)}
+                      scale={activeQuotation?.stampScale || 1}
+                      onScaleChange={(scale) => handleFieldChange('stampScale', scale)}
+                      defaultPosition={{ xPct: 84, yPct: 92 }}
+                      language={language as 'zh' | 'en'}
+                    />
+                  )}
                 </div>
               </div>
             </div>

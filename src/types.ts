@@ -129,6 +129,8 @@ export interface Invoice {
   showStamp?: boolean;
   showSecondaryStamp?: boolean;
   showSignature?: boolean;
+  stampPosition?: { xPct: number; yPct: number } | null;
+  stampScale?: number;
 }
 
 export interface PackingListItem {
@@ -375,6 +377,8 @@ export interface ProformaInvoice {
   customStamp?: string;
   customSecondaryStamp?: string;
   customSignature?: string;
+  stampPosition?: { xPct: number; yPct: number } | null;
+  stampScale?: number;
   createdAt: string;
 }
 
@@ -515,6 +519,8 @@ export interface Quotation {
   localAccountNumber?: string;
   wechatQr?: string;
   alipayQr?: string;
+  stampPosition?: { xPct: number; yPct: number } | null;
+  stampScale?: number;
   createdAt: string;
 }
 

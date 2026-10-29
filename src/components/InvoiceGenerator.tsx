@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Invoice, InvoiceItem, Client, Product, CompanySettings, getCurrencySymbol, formatUnitPrice, SUPPORTED_CURRENCIES } from '../types';
 import { generateId, getNextDocumentNumber } from '../utils/storage';
@@ -25,11 +25,13 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Stamp
+  Stamp,
+  Move
 } from 'lucide-react';
 
 import { compressImageFile } from '../utils/imageCompressor';
 import { TransparentSignature } from './TransparentSignature';
+import { DraggableStamp } from './DraggableStamp';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 
 interface InvoiceGeneratorProps {
@@ -68,6 +70,7 @@ export default function InvoiceGenerator({
   const [isDownloading, setIsDownloading] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const [previewZoom, setPreviewZoom] = useState<number>(100);
+  const printAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Navigation Guard for Unsaved Changes
   const { registerUnsavedChanges, unregisterUnsavedChanges, requestActionWithGuard } = useNavigationGuard();
@@ -1485,6 +1488,87 @@ export default function InvoiceGenerator({
                         {language === 'zh' ? '付款条款已从发票中隐藏。' : 'Terms of payment section is hidden from this commercial invoice.'}
                       </p>
                     )}
+                    {/* Company Stamp & Placement Controls */}
+                    <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={activeInvoice.showStamp !== false}
+                            onChange={(e) => handleFieldChange('showStamp', e.target.checked)}
+                            className="rounded text-[#1565C0] focus:ring-[#1565C0] h-3.5 w-3.5"
+                          />
+                          <span className="text-[10px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                            <Stamp size={12} className="text-[#1565C0]" />
+                            <span>{language === 'zh' ? '在发票中盖印公司公章' : 'Display Company Stamp'}</span>
+                          </span>
+                        </label>
+                        {activeInvoice.stampPosition && (
+                          <button
+                            type="button"
+                            onClick={() => handleFieldChange('stampPosition', null)}
+                            className="text-[9px] text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-0.5 cursor-pointer"
+                            title="Reset to default footer position"
+                          >
+                            <RotateCcw size={9} />
+                            <span>{language === 'zh' ? '重置位置' : 'Reset'}</span>
+                          </button>
+                        )}
+                      </div>
+                      {settings.stamp && activeInvoice.showStamp !== false && (
+                        <div className="space-y-1.5 pt-1 border-t border-slate-200">
+                          <p className="text-[9px] text-slate-400 leading-tight">
+                            {language === 'zh' ? '💡 支持直接在右侧发票预览页任意自由拖拽盖章，或点击快捷定位：' : '💡 Directly click & drag stamp anywhere on preview page, or snap to preset:'}
+                          </p>
+                          <div className="grid grid-cols-2 gap-1 pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleFieldChange('stampPosition', { xPct: 84, yPct: 92 })}
+                              className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                                (!activeInvoice.stampPosition || (activeInvoice.stampPosition.xPct === 84 && activeInvoice.stampPosition.yPct === 92))
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              📄 {language === 'zh' ? '单据右下角' : 'Footer Right'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFieldChange('stampPosition', { xPct: 42, yPct: 83 })}
+                              className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                                (activeInvoice.stampPosition?.xPct === 42 && activeInvoice.stampPosition?.yPct === 83)
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              🏦 {language === 'zh' ? '银行电汇旁' : 'Bank Remittance'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFieldChange('stampPosition', { xPct: 82, yPct: 76 })}
+                              className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                                (activeInvoice.stampPosition?.xPct === 82 && activeInvoice.stampPosition?.yPct === 76)
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              💰 {language === 'zh' ? '总计结算处' : 'Grand Total Area'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFieldChange('stampPosition', { xPct: 40, yPct: 92 })}
+                              className={`px-1.5 py-1 text-[8.5px] rounded border text-left font-medium transition-colors cursor-pointer ${
+                                (activeInvoice.stampPosition?.xPct === 40 && activeInvoice.stampPosition?.yPct === 92)
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              ✍️ {language === 'zh' ? '条款说明处' : 'Terms & Notes'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1505,6 +1589,7 @@ export default function InvoiceGenerator({
                   {/* Realistic A4 Page Wrap Container */}
                   <div 
                     id="print-area"
+                    ref={printAreaRef}
                     className="w-full max-w-[210mm] min-h-[296mm] bg-white border border-slate-200 shadow-xl rounded-none p-4 sm:p-8 md:p-[12mm] text-slate-800 flex flex-col justify-between font-sans relative shrink-0 box-border overflow-hidden transition-all duration-150 print:p-0 print:border-none print:shadow-none print:w-full print:max-w-none"
                   >
                 {/* Print Layout Header */}
@@ -1953,13 +2038,24 @@ export default function InvoiceGenerator({
                 </div>
 
                 {/* Print Layout Footer */}
-                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0">
-                  {settings.stamp && (
-                    <div className="relative h-16 w-28 flex items-center justify-end">
-                      <TransparentSignature src={settings.stamp} alt="Factory Stamp" className="max-h-16 max-w-full object-contain" />
-                    </div>
-                  )}
+                <div className="border-t border-slate-100 pt-5 flex items-end justify-end text-[8px] text-slate-400 font-semibold mt-6 shrink-0 min-h-16">
+                  {/* Base layout spacer for footer rule */}
                 </div>
+
+                {/* Free-Placement Draggable & Repositionable Factory Stamp */}
+                {settings.stamp && activeInvoice?.showStamp !== false && (
+                  <DraggableStamp
+                    src={settings.stamp}
+                    alt="Factory Stamp"
+                    containerRef={printAreaRef}
+                    position={activeInvoice?.stampPosition}
+                    onPositionChange={(pos) => handleFieldChange('stampPosition', pos)}
+                    scale={activeInvoice?.stampScale || 1}
+                    onScaleChange={(scale) => handleFieldChange('stampScale', scale)}
+                    defaultPosition={{ xPct: 84, yPct: 92 }}
+                    language={language as 'zh' | 'en'}
+                  />
+                )}
               </div>
                 </div>
               </div>
