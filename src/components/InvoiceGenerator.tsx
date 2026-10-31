@@ -32,6 +32,7 @@ import {
 import { compressImageFile } from '../utils/imageCompressor';
 import { TransparentSignature } from './TransparentSignature';
 import { DraggableStamp } from './DraggableStamp';
+import PrintDocumentModal from './PrintDocumentModal';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 
 interface InvoiceGeneratorProps {
@@ -96,6 +97,7 @@ export default function InvoiceGenerator({
   }, [isEditing, activeInvoice, invoices]);
 
   // Selector Modals
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [itemIndexToEdit, setItemIndexToEdit] = useState<number | null>(null);
@@ -423,7 +425,11 @@ export default function InvoiceGenerator({
   };
 
   const handlePrint = () => {
-    printDocument('print-area');
+    if (!activeInvoice) return;
+    if (mobileTab === 'form') {
+      setMobileTab('preview');
+    }
+    setShowPrintModal(true);
   };
 
   // PDF Download Execution
@@ -2139,6 +2145,22 @@ export default function InvoiceGenerator({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Dedicated Print & Export Modal with Instant Fallback & Diagnostics */}
+      {activeInvoice && (
+        <PrintDocumentModal
+          isOpen={showPrintModal}
+          onClose={() => setShowPrintModal(false)}
+          documentTitle={language === 'zh' ? '商业发票' : 'Commercial Invoice'}
+          documentNumber={activeInvoice.invoiceNumber || 'INV-DRAFT'}
+          elementId="print-area"
+          clientName={activeInvoice.client?.company || activeInvoice.client?.contactPerson}
+          date={activeInvoice.date}
+          grandTotal={formatUnitPrice(activeInvoice.grandTotal || 0, activeInvoice.currency)}
+          currency={getCurrencySymbol(activeInvoice.currency)}
+          language={language}
+        />
       )}
     </div>
   );

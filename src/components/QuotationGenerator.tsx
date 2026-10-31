@@ -6,6 +6,7 @@ import { exportDocumentToPDF, printDocument } from '../utils/pdf';
 import { compressImageFile } from '../utils/imageCompressor';
 import { TransparentSignature } from './TransparentSignature';
 import { DraggableStamp } from './DraggableStamp';
+import PrintDocumentModal from './PrintDocumentModal';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 import { 
   FileSpreadsheet, 
@@ -107,6 +108,7 @@ export default function QuotationGenerator({
   }, [isEditing, activeQuotation, quotations]);
 
   // Modals & Search state
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [showClientModal, setShowClientModal] = useState(false);
@@ -740,7 +742,11 @@ export default function QuotationGenerator({
   };
 
   const handlePrint = () => {
-    printDocument('print-area');
+    if (!activeQuotation) return;
+    if (mobileTab === 'form') {
+      setMobileTab('preview');
+    }
+    setShowPrintModal(true);
   };
 
   // PDF Download Execution
@@ -2713,6 +2719,22 @@ export default function QuotationGenerator({
             )}
           </div>
         </div>
+      )}
+
+      {/* Dedicated Print & Export Modal with Instant Fallback & Diagnostics */}
+      {activeQuotation && (
+        <PrintDocumentModal
+          isOpen={showPrintModal}
+          onClose={() => setShowPrintModal(false)}
+          documentTitle={language === 'zh' ? '形式报价单' : 'Price Quotation'}
+          documentNumber={activeQuotation.quotationNumber || 'QT-DRAFT'}
+          elementId="print-area"
+          clientName={activeQuotation.client?.company || activeQuotation.client?.contactPerson}
+          date={activeQuotation.date}
+          grandTotal={formatUnitPrice(activeQuotation.grandTotal || 0, activeQuotation.currency)}
+          currency={getCurrencySymbol(activeQuotation.currency)}
+          language={language}
+        />
       )}
     </div>
   );

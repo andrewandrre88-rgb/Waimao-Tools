@@ -27,33 +27,65 @@
 }
 
 /* High fidelity Print & PDF compilation engine styling */
+/* High fidelity Print & PDF compilation engine styling */
 @media print {
-  /* Completely hide all structural frames and panels */
-  body {
+  /* Hide non-print UI chrome, sidebars, headers, action bars */
+  aside,
+  header,
+  nav,
+  button,
+  .print\:hidden,
+  [class*="print:hidden"],
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root {
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
   }
 
-  body * {
-    visibility: hidden;
-  }
-
-  /* Target only the active live preview A4 sheet */
-  #print-area, #print-area *,
-  #contract-print-area, #contract-print-area *,
-  #certificate-preview-document, #certificate-preview-document *,
-  #shipping-preview-document, #shipping-preview-document *,
-  #shipping-instruction-preview, #shipping-instruction-preview * {
+  /* Unhide preview containers even if mobile tab was form */
+  main,
+  div:has(> #print-area),
+  div:has(#print-area),
+  div:has(#contract-print-area),
+  div:has(#certificate-preview-document),
+  div:has(#shipping-preview-document),
+  div:has(#shipping-instruction-preview) {
+    display: block !important;
     visibility: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
   }
 
-  #print-area, #contract-print-area, #certificate-preview-document, #shipping-preview-document, #shipping-instruction-preview {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+  /* Target document sheets */
+  #print-area,
+  #contract-print-area,
+  #certificate-preview-document,
+  #shipping-preview-document,
+  #shipping-instruction-preview {
+    display: flex !important;
+    visibility: visible !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
     width: 210mm !important;
     min-height: 297mm !important;
+    max-width: 100% !important;
     padding: 8mm !important;
     margin: 0 auto !important;
     border: none !important;
@@ -61,17 +93,18 @@
     background-color: white !important;
     color: #1e293b !important;
     overflow: visible !important;
-    page-break-after: avoid;
-    page-break-before: avoid;
+    transform: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
-  /* Force background colors and brand colors to compile in PDF exports */
+  /* Force background colors and exact brand colors */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Eliminate browser print margin stamps (date, url, page number) */
+  /* Page setup for clean single/multi-page A4 print */
   @page {
     size: A4 portrait;
     margin: 0 !important;

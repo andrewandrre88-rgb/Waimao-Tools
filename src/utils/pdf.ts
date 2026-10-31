@@ -392,137 +392,169 @@ export function prepareCloneForPDF(clonedDoc: Document, liveRootElement?: HTMLEl
 }
 
 /**
- * Isolated, non-blocking print helper.
- * Renders document in a hidden iframe so the main UI never freezes.
+ * Ultra-resilient print helper with direct print, clean stylesheet isolation,
+ * and automatic PDF fallback if iframe print is blocked by container permissions.
  */
-export function printDocument(elementId: string): void {
+export function printDocument(elementId: string, docTitle?: string): void {
   const targetElement = document.getElementById(elementId);
   if (!targetElement) {
-    window.print();
-    return;
-  }
-
-  // Create isolated hidden iframe for printing
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  iframe.style.visibility = 'hidden';
-  iframe.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(iframe);
-
-  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!iframeDoc) {
-    if (document.body.contains(iframe)) {
-      document.body.removeChild(iframe);
-    }
-    window.print();
-    return;
-  }
-
-  // Collect and sanitize all styles from the current document
-  let stylesHtml = '';
-  try {
-    const sheets = Array.from(document.styleSheets);
-    sheets.forEach((sheet) => {
-      try {
-        let cssText = '';
-        const rules = Array.from(sheet.cssRules || []);
-        for (const rule of rules) {
-          cssText += rule.cssText + '\n';
-        }
-        if (cssText) {
-          stylesHtml += `<style>${convertAllModernColorsToRgb(cssText)}</style>`;
-        }
-      } catch (e) {
-        // Cross-origin
-      }
-    });
-  } catch (e) {
-    // ignore
-  }
-
-  document.querySelectorAll('style').forEach((node) => {
-    stylesHtml += `<style>${convertAllModernColorsToRgb(node.textContent || '')}</style>`;
-  });
-
-  // Clone element content
-  const clone = targetElement.cloneNode(true) as HTMLElement;
-  
-  // Convert inputs to visible text in clone
-  clone.querySelectorAll('input, select, textarea').forEach((inputEl) => {
-    const val = (inputEl as any).value || (inputEl as any).placeholder || '';
-    const span = document.createElement('span');
-    span.textContent = val;
-    span.className = inputEl.className;
-    span.setAttribute('style', inputEl.getAttribute('style') || '');
-    if (inputEl.parentNode) {
-      inputEl.parentNode.replaceChild(span, inputEl);
-    }
-  });
-
-  iframeDoc.open();
-  iframeDoc.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Print Document</title>
-        ${stylesHtml}
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 0 !important;
-          }
-          *, *::before, *::after {
-            box-sizing: border-box !important;
-          }
-          body {
-            margin: 0 !important;
-            padding: 8mm !important;
-            background: #ffffff !important;
-            color: #1e293b !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-          }
-          .bg-slate-50 {
-            background-color: #f8fafc !important;
-          }
-          .border-slate-100 {
-            border-color: #f1f5f9 !important;
-          }
-          .border-slate-200 {
-            border-color: #e2e8f0 !important;
-          }
-        </style>
-      </head>
-      <body>
-        ${clone.outerHTML}
-      </body>
-    </html>
-  `);
-  iframeDoc.close();
-
-  // Trigger print cleanly after iframe has mounted
-  setTimeout(() => {
     try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-    } catch (e) {
-      console.warn('Iframe print fallback to window.print():', e);
       window.print();
-    } finally {
-      setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-      }, 2500);
+    } catch {
+      // ignore
     }
-  }, 250);
+    return;
+  }
+
+  // 1. Sync live input and textarea values so attributes reflect them during printing
+  targetElement.querySelectorAll('input, select, textarea').forEach((inputEl: any) => {
+    if (inputEl.type !== 'checkbox' && inputEl.type !== 'radio') {
+      inputEl.setAttribute('value', inputEl.value || '');
+    }
+  });
+
+  // 2. Check if running inside a sandboxed iframe (like AI Studio or web previews)
+  let isInIframe = false;
+  try {
+    isInIframe = window.self !== window.top;
+  } catch {
+    isInIframe = true;
+  }
+
+  // If running top-level (not inside an iframe), standard window.print() is the best path
+  if (!isInIframe) {
+    try {
+      window.print();
+      return;
+    } catch (directPrintErr) {
+      console.warn('Direct window.print() failed:', directPrintErr);
+    }
+  } else {
+    // In sandboxed iframe: browser may block modal window.print(). Attempt print, but also fallback to printable PDF.
+    try {
+      window.print();
+    } catch (e) {
+      console.warn('Iframe window.print() restricted:', e);
+    }
+    // Also trigger instant printable PDF generation so the user always gets their printable document
+    exportDocumentToPDF(elementId, `${docTitle || 'Document'}_Print`).catch(err => {
+      console.warn('Fallback PDF export:', err);
+    });
+    return;
+  }
+
+  // 3. If direct window.print() was not callable (e.g. sandbox restriction),
+  // prepare an off-screen printable iframe (non-zero size, non-hidden so Chromium renders it)
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-doc-engine-frame';
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '-9999px';
+    iframe.style.width = '1000px';
+    iframe.style.height = '1000px';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    iframe.style.border = 'none';
+    iframe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc && iframe.contentWindow) {
+      let stylesHtml = '';
+      try {
+        const sheets = Array.from(document.styleSheets);
+        sheets.forEach((sheet) => {
+          try {
+            let cssText = '';
+            const rules = Array.from(sheet.cssRules || []);
+            for (const rule of rules) {
+              cssText += rule.cssText + '\n';
+            }
+            if (cssText) {
+              stylesHtml += `<style>${convertAllModernColorsToRgb(cssText)}</style>`;
+            }
+          } catch (e) {}
+        });
+      } catch (e) {}
+
+      document.querySelectorAll('style').forEach((node) => {
+        stylesHtml += `<style>${convertAllModernColorsToRgb(node.textContent || '')}</style>`;
+      });
+
+      const clone = targetElement.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('input, select, textarea').forEach((inputEl: any) => {
+        const val = inputEl.value || inputEl.placeholder || '';
+        const span = document.createElement('span');
+        span.textContent = val;
+        span.className = inputEl.className;
+        span.setAttribute('style', inputEl.getAttribute('style') || '');
+        if (inputEl.parentNode) {
+          inputEl.parentNode.replaceChild(span, inputEl);
+        }
+      });
+
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>${docTitle || 'Print Document'}</title>
+            ${stylesHtml}
+            <style>
+              @page { size: A4 portrait; margin: 0 !important; }
+              *, *::before, *::after { box-sizing: border-box !important; }
+              body {
+                margin: 0 !important;
+                padding: 8mm !important;
+                background: #ffffff !important;
+                color: #1e293b !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              }
+              #print-area, #contract-print-area, #certificate-preview-document, #shipping-preview-document, #shipping-instruction-preview {
+                width: 100% !important;
+                max-width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 auto !important;
+                border: none !important;
+                box-shadow: none !important;
+                transform: none !important;
+              }
+            </style>
+          </head>
+          <body>
+            ${clone.outerHTML}
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (iframeErr) {
+          console.warn('Iframe print error, falling back to PDF download:', iframeErr);
+          exportDocumentToPDF(elementId, docTitle || 'Document');
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 3500);
+        }
+      }, 300);
+      return;
+    }
+  } catch (iframeSetupErr) {
+    console.warn('Iframe setup failed, falling back to PDF download:', iframeSetupErr);
+  }
+
+  // 4. Ultimate fallback: if print dialog is restricted by the container environment, export PDF
+  exportDocumentToPDF(elementId, docTitle || 'Document');
 }
 
 /**

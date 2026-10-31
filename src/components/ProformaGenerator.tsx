@@ -6,6 +6,7 @@ import { compressImageFile, removeWhiteBackground } from '../utils/imageCompress
 import { TransparentSignature } from './TransparentSignature';
 import { DraggableStamp } from './DraggableStamp';
 import ProductImageModal from './ProductImageModal';
+import PrintDocumentModal from './PrintDocumentModal';
 import { useNavigationGuard } from '../context/NavigationGuardContext';
 import { useLanguage } from '../context/LanguageContext';
 import { 
@@ -108,6 +109,7 @@ export default function ProformaGenerator({
   const [imageModalTitle, setImageModalTitle] = useState<string>('Product');
 
   // Modals & Search state
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [showInlineProductForm, setShowInlineProductForm] = useState(false);
@@ -730,7 +732,11 @@ export default function ProformaGenerator({
   };
 
   const handlePrint = () => {
-    printDocument('print-area');
+    if (!activeProforma) return;
+    if (mobileTab === 'form') {
+      setMobileTab('preview');
+    }
+    setShowPrintModal(true);
   };
 
   // PDF Download Execution
@@ -974,7 +980,7 @@ export default function ProformaGenerator({
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Form Inputs (lg:col-span-6) */}
-            <div className={`lg:col-span-6 space-y-5 ${mobileTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
+            <div className={`lg:col-span-6 space-y-5 print:hidden ${mobileTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
               {/* Document Metadata (Card 1) */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
@@ -2258,9 +2264,9 @@ export default function ProformaGenerator({
             </div>
 
             {/* Right Side Live A4 Visual Preview (lg:col-span-6) */}
-            <div className={`lg:col-span-6 flex flex-col items-center w-full min-w-0 ${mobileTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`lg:col-span-6 flex flex-col items-center w-full min-w-0 print:flex! print:w-full! print:max-w-none! print:m-0! print:p-0! ${mobileTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
               {/* Realistic A4 Page Wrap Container matching Commercial Invoice */}
-              <div className="w-full overflow-x-auto pb-6 flex justify-center bg-slate-100/50 p-2 sm:p-4 rounded-xl border border-slate-200/80">
+              <div className="w-full overflow-x-auto pb-6 flex justify-center bg-slate-100/50 p-2 sm:p-4 rounded-xl border border-slate-200/80 print:p-0! print:m-0! print:border-none! print:bg-white! print:overflow-visible!">
                 <div 
                   id="print-area"
                   ref={printAreaRef}
@@ -2270,7 +2276,7 @@ export default function ProformaGenerator({
                     transformOrigin: 'top center',
                     marginBottom: previewZoom > 100 ? `${(previewZoom - 100) * 8}px` : undefined
                   }}
-                  className="w-full max-w-[210mm] min-h-[297mm] bg-white border border-slate-200 shadow-xl rounded-none p-4 sm:p-8 md:p-[12mm] text-slate-800 flex flex-col justify-between font-sans relative shrink-0 aspect-[1/1.414] overflow-hidden transition-all duration-150 print:p-0 print:border-none print:shadow-none print:w-full print:max-w-none"
+                  className="w-full max-w-[210mm] min-h-[297mm] bg-white border border-slate-200 shadow-xl rounded-none p-4 sm:p-8 md:p-[12mm] text-slate-800 flex flex-col justify-between font-sans relative shrink-0 aspect-[1/1.414] overflow-hidden transition-all duration-150 print:p-0! print:border-none! print:shadow-none! print:w-full! print:max-w-none! print:transform-none!"
                 >
                 {/* Print Layout Header */}
                 <div className="space-y-4 sm:space-y-5">
@@ -3152,6 +3158,22 @@ export default function ProformaGenerator({
         productName={imageModalTitle}
         onSaveImage={handleSaveItemImage}
       />
+
+      {/* Dedicated Print & Export Modal with Instant Fallback & Diagnostics */}
+      {activeProforma && (
+        <PrintDocumentModal
+          isOpen={showPrintModal}
+          onClose={() => setShowPrintModal(false)}
+          documentTitle={language === 'zh' ? '形式发票' : 'Proforma Invoice'}
+          documentNumber={activeProforma.proformaNumber || 'PI-DRAFT'}
+          elementId="print-area"
+          clientName={activeProforma.client?.company || activeProforma.client?.contactPerson}
+          date={activeProforma.date}
+          grandTotal={formatUnitPrice(activeProforma.grandTotal || 0, activeProforma.currency)}
+          currency={getCurrencySymbol(activeProforma.currency)}
+          language={language}
+        />
+      )}
     </div>
   );
 }
